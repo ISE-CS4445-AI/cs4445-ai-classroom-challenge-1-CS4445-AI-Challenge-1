@@ -1,0 +1,35 @@
+name: Autograding Tests
+'on':
+- push
+- repository_dispatch
+permissions:
+  checks: write
+  actions: read
+  contents: read
+jobs:
+  run-autograding-tests:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-classroom[bot]'
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    - name: test_challenge1.py
+      id: test_challenge1-py
+      uses: classroom-resources/autograding-python-grader@v1
+      env:
+        C1_MCQF_1: ${{ vars.C1_MCQF_1 }}
+        C1_MCQF_2: ${{ vars.C1_MCQF_2 }}
+        C1_MCQF_3: ${{ vars.C1_MCQF_3 }}
+        C1_TESTSET_INDICES: ${{ vars.C1_TESTSET_INDICES }}
+      with:
+        timeout: 10
+        max-score: 9
+        setup-command: |
+          pip install -r requirements.txt
+          jupyter nbconvert --to python challenge-1.ipynb --output challenge_1_export.py
+    - name: Autograding Reporter
+      uses: classroom-resources/autograding-grading-reporter@v1
+      env:
+        TEST_CHALLENGE1-PY_RESULTS: "${{steps.test_challenge1-py.outputs.result}}"
+      with:
+        runners: test_challenge1-py
